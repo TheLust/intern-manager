@@ -3,6 +3,7 @@ package md.ceiti.internmanager.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import md.ceiti.internmanager.dto.EmployeeDto;
+import md.ceiti.internmanager.dto.EmployeeIncome;
 import md.ceiti.internmanager.facade.implementation.EmployeeFacade;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -40,6 +41,16 @@ public class EmployeeController {
         return new ResponseEntity<>(
                 employeeFacade.findAll(),
                 HttpStatus.OK
+        );
+    }
+
+    @GetMapping("/income/")
+    public ResponseEntity<List<EmployeeIncome>> getAllEmployeeIncomes(@RequestParam("id") Long id,
+                                                                      @RequestParam("month") Integer month) {
+        return new ResponseEntity<>(
+                employeeFacade.getEmployeeIncomes(id, month),
+                HttpStatus.OK
+
         );
     }
 

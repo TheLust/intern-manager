@@ -12,6 +12,7 @@ import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 import md.ceiti.internmanager.enums.Stage;
 
 import java.util.List;
@@ -20,6 +21,7 @@ import java.util.List;
 @Table(uniqueConstraints = @UniqueConstraint(columnNames = {"name", "stage"}))
 @Getter
 @Setter
+@ToString
 public class Job {
 
     @Id

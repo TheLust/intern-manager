@@ -3,21 +3,28 @@ package md.ceiti.internmanager.facade.implementation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import md.ceiti.internmanager.dto.EmployeeDto;
+import md.ceiti.internmanager.dto.EmployeeIncome;
+import md.ceiti.internmanager.entity.Assignment;
 import md.ceiti.internmanager.entity.Department;
 import md.ceiti.internmanager.entity.Employee;
 import md.ceiti.internmanager.entity.Job;
+import md.ceiti.internmanager.entity.Wage;
+import md.ceiti.internmanager.entity.WorkRecord;
 import md.ceiti.internmanager.exception.NotFoundException;
 import md.ceiti.internmanager.facade.interfaces.IEmployeeFacade;
 import md.ceiti.internmanager.mapper.EmployeeMapper;
+import md.ceiti.internmanager.mapper.ProjectMapper;
 import md.ceiti.internmanager.service.implementation.DepartmentService;
 import md.ceiti.internmanager.service.implementation.EmployeeService;
 import md.ceiti.internmanager.service.implementation.JobService;
+import md.ceiti.internmanager.service.implementation.WageService;
 import md.ceiti.internmanager.util.ErrorUtils;
 import md.ceiti.internmanager.util.ExceptionMessage;
 import md.ceiti.internmanager.validator.EmployeeValidator;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.BindingResult;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -31,7 +38,11 @@ public class EmployeeFacade implements IEmployeeFacade {
 
     private final JobService jobService;
 
+    private final WageService wageService;
+
     private final EmployeeMapper employeeMapper;
+
+    private final ProjectMapper projectMapper;
 
     private final EmployeeValidator employeeValidator;
 
@@ -53,6 +64,43 @@ public class EmployeeFacade implements IEmployeeFacade {
         }
 
         return findByPhoneNumber(phoneNumber);
+    }
+
+    public List<EmployeeIncome> getEmployeeIncomes(Long id, Integer month) {
+        Optional<Employee> employee = employeeService.findById(id);
+        if (employee.isEmpty()) {
+            throw new NotFoundException(Employee.class);
+        }
+
+        return employee.get()
+                .getAssignments()
+                .stream()
+                .map(assignment -> getEmployeeIncome(assignment, employee.get().getJob(), month))
+                .toList();
+    }
+
+    private EmployeeIncome getEmployeeIncome(Assignment assignment, Job job, Integer month) {
+        EmployeeIncome employeeIncome = new EmployeeIncome();
+
+        employeeIncome.setProject(projectMapper.toProjectDto(assignment.getProject()));
+        employeeIncome.setWorkedHours(assignment.getWorkRecords()
+                .stream()
+                .filter(
+                        workRecord -> workRecord.getDate().getMonthValue() == month &&
+                        workRecord.getDate().getYear() == LocalDate.now().getYear()
+                )
+                .map(WorkRecord::getWorkedHours)
+                .reduce(0D, Double::sum)
+        );
+
+        Optional<Wage> wage = wageService.findByProjectAndJob(assignment.getProject(), job);
+        if (wage.isEmpty()) {
+            throw new NotFoundException(Wage.class);
+        }
+        employeeIncome.setPaymentPerHour(wage.get().getPaymentPerHour());
+        employeeIncome.setIncome(employeeIncome.getPaymentPerHour() * employeeIncome.getWorkedHours());
+
+        return employeeIncome;
     }
 
     private EmployeeDto findById(Long id) {

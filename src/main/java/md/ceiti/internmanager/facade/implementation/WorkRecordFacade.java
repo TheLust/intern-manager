@@ -3,11 +3,13 @@ package md.ceiti.internmanager.facade.implementation;
 import lombok.RequiredArgsConstructor;
 import md.ceiti.internmanager.dto.WorkRecordDto;
 import md.ceiti.internmanager.entity.Assignment;
+import md.ceiti.internmanager.entity.Wage;
 import md.ceiti.internmanager.entity.WorkRecord;
 import md.ceiti.internmanager.exception.NotFoundException;
 import md.ceiti.internmanager.facade.interfaces.IWorkRecordFacade;
 import md.ceiti.internmanager.mapper.WorkRecordMapper;
 import md.ceiti.internmanager.service.implementation.AssignmentService;
+import md.ceiti.internmanager.service.implementation.WageService;
 import md.ceiti.internmanager.service.implementation.WorkRecordService;
 import md.ceiti.internmanager.util.ErrorUtils;
 import md.ceiti.internmanager.util.ExceptionMessage;
@@ -26,6 +28,8 @@ public class WorkRecordFacade implements IWorkRecordFacade {
     private final WorkRecordService workRecordService;
 
     private final AssignmentService assignmentService;
+
+    private final WageService wageService;
 
     private final WorkRecordMapper workRecordMapper;
 
@@ -78,7 +82,11 @@ public class WorkRecordFacade implements IWorkRecordFacade {
     public List<WorkRecordDto> getAll() {
         return workRecordService.findAll()
                 .stream()
-                .map(workRecordMapper::toWorkRecordDto)
+                .map(workRecord -> {
+                    WorkRecordDto workRecordDto = workRecordMapper.toWorkRecordDto(workRecord);
+                    workRecordDto.setAmount(calculatePaymentForWorkRecord(workRecord));
+                    return workRecordDto;
+                })
                 .toList();
     }
 
@@ -141,5 +149,23 @@ public class WorkRecordFacade implements IWorkRecordFacade {
         workRecordService.delete(id);
 
         return "Deleted";
+    }
+
+    private Double calculatePaymentForWorkRecord(WorkRecord workRecord) {
+        Optional<Wage> wage = wageService.findByProjectAndJob(workRecord.getAssignment().getProject(),
+                workRecord.getAssignment().getEmployee().getJob());
+        if (wage.isEmpty()) {
+            throw new NotFoundException("Wage" +
+                    ExceptionMessage.NOT_FOUND +
+                    ". Please insert wage for project '" +
+                    workRecord.getAssignment().getProject().getName() +
+                    "' and job '" +
+                    workRecord.getAssignment().getEmployee().getJob().getName() +
+                    " | " +
+                    workRecord.getAssignment().getEmployee().getJob().getStage().getDisplayName() +
+                    "'");
+        }
+
+        return workRecord.getWorkedHours() * wage.get().getPaymentPerHour();
     }
 }

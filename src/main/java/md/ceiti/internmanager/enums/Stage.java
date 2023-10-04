@@ -4,5 +4,9 @@ public enum Stage {
     INTERN,
     JUNIOR,
     INTERMEDIATE,
-    SENIOR
+    SENIOR;
+
+    public String getDisplayName() {
+        return name().substring(0, 1).toUpperCase() + name().substring(1).toLowerCase();
+    }
 }
