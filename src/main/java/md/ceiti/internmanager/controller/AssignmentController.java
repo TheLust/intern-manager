@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("${api.url.base}/assignments")
+@RequestMapping("${api.url}/assignments")
 @RequiredArgsConstructor
 public class AssignmentController {
 

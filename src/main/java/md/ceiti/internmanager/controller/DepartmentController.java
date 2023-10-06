@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("${api.url.base}/departments")
+@RequestMapping("${api.url}/departments")
 @RequiredArgsConstructor
 public class DepartmentController {
 

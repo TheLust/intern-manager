@@ -20,7 +20,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @RestController
-@RequestMapping("${api.url.base}/records")
+@RequestMapping("${api.url}/records")
 @RequiredArgsConstructor
 public class WorkRecordController {
 

@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("${api.url.base}/employees")
+@RequestMapping("${api.url}/employees")
 @RequiredArgsConstructor
 public class EmployeeController {
 
